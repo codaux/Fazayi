@@ -30,8 +30,16 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9); // کاهش شدت نور جهت‌دار
 directionalLight.position.set(-4, 3, 3); // تغییر جهت نور
 directionalLight.castShadow = true;
-directionalLight.shadow.mapSize.width = 2048;
-directionalLight.shadow.mapSize.height = 2048;
+directionalLight.shadow.radius = 4; // افزایش نرمی سایه
+directionalLight.shadow.bias = -0.0001; // تنظیم بایاس سایه
+directionalLight.shadow.mapSize.width = 4096; // افزایش کیفیت سایه
+directionalLight.shadow.mapSize.height = 4096;
+directionalLight.shadow.camera.near = 0.5;
+directionalLight.shadow.camera.far = 50;
+directionalLight.shadow.camera.left = -15;
+directionalLight.shadow.camera.right = 15;
+directionalLight.shadow.camera.top = 15;
+directionalLight.shadow.camera.bottom = -15;
 scene.add(directionalLight);
 
 // اضافه کردن نور نقطه‌ای برای جلوه بیشتر
@@ -46,20 +54,20 @@ scene.add(bottomLight);
 
 // ایجاد محفظه نیم‌کره شفاف با کیفیت بالاتر
 const radius = 7;
-const containerGeometry = new THREE.SphereGeometry(radius, 64, 64, 0, Math.PI * 2, 0, Math.PI / 2, false);
+const containerGeometry = new THREE.SphereGeometry(radius, 128, 128, 0, Math.PI * 2, 0, Math.PI / 2, false);
 const containerMaterial = new THREE.MeshPhysicalMaterial({
     color: 0xddffff,
     transparent: true,
-    opacity: 0.3,
-    metalness: 0.8,
-    roughness: 0.1,
-    clearcoat: 0.1,
-    clearcoatRoughness: 0.9,
+    opacity: 0.2,
+    metalness: 0.1,
+    roughness: 0.05,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.1,
     side: THREE.DoubleSide,
     envMapIntensity: 1.0
 });
 const container = new THREE.Mesh(containerGeometry, containerMaterial);
-container.castShadow = true;
+container.castShadow = false;
 container.receiveShadow = true;
 scene.add(container);
 
@@ -74,7 +82,7 @@ loader.load(
         base.traverse((node) => {
             if (node.isMesh) {
                 node.material = new THREE.MeshPhysicalMaterial({
-                    color: 0x3300aa,
+                    color: 0xff00aa,
                     metalness: 0.2,
                     roughness: 0.9,
                     clearcoat: 0.3,
@@ -109,9 +117,9 @@ loader.load(
 // تنظیمات فیزیک توپ‌ها
 const BALL_RADIUS = 0.8; // افزایش از 0.64 به 0.8
 const BALL_MASS = 2.0;
-const FRICTION = 0.95; // افزایش اصطکاک برای میرایی بیشتر
-const RESTITUTION = 0.5; // کاهش ضریب بازگشت برای کاهش جهش
-const REPULSION_FORCE = 1.5; // کاهش نیروی دافعه بین توپ‌ها
+const FRICTION = 0.98; // کاهش اصطکاک
+const RESTITUTION = 0.7; // افزایش ضریب بازگشت
+const REPULSION_FORCE = 2.0; // افزایش نیروی دافعه
 
 // تنظیم موقعیت اولیه توپ‌ها
 const ballColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
@@ -156,7 +164,7 @@ camera.lookAt(0, 0, 0);
 // متغیرهای انیمیشن
 let isAnimating = false;
 let animationStartTime = 0;
-const gravity = -0.025;
+const gravity = -0.095;
 let gravityEnabled = false; // متغیر جدید برای کنترل جاذبه
 
 // تابع ریست کردن موقعیت توپ‌ها
@@ -298,6 +306,19 @@ function handleBallCollision(ball1, ball2) {
             ball1.userData.velocity.multiplyScalar(0.8);
             ball2.userData.velocity.multiplyScalar(0.8);
         }
+
+        // اضافه کردن کمی نیروی تصادفی برای بازیگوشی بیشتر
+        const randomForce = 0.05;
+        ball1.userData.velocity.add(new THREE.Vector3(
+            (Math.random() - 0.5) * randomForce,
+            (Math.random() - 0.5) * randomForce,
+            (Math.random() - 0.5) * randomForce
+        ));
+        ball2.userData.velocity.add(new THREE.Vector3(
+            (Math.random() - 0.5) * randomForce,
+            (Math.random() - 0.5) * randomForce,
+            (Math.random() - 0.5) * randomForce
+        ));
     }
 }
 
@@ -307,9 +328,9 @@ renderer.domElement.addEventListener('click', () => {
     gravityEnabled = true;
     balls.forEach(ball => {
         ball.userData.velocity.set(
-            (Math.random() - 0.5) * 0.5, // افزایش از 0.3 به 0.5
-            (Math.random() - 0.5) * 0.5,
-            (Math.random() - 0.5) * 0.5
+            (Math.random() - 0.5) * 0.8, // افزایش از 0.5 به 0.8
+            (Math.random() - 0.5) * 0.8,
+            (Math.random() - 0.5) * 0.8
         );
     });
 });
