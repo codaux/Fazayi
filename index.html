@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توپ‌های رنگی در محفظه شیشه‌ای</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
+        
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(#d7d7e7 0%, #0a47ee 50%, #050560 100%);
+            /* background-size: 400% 400%; */
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        canvas {
+            display: block;
+        }
+        #resetButton {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(237, 237, 237, 0.36);
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 1s ease;
+            backdrop-filter: blur(5px);
+        }
+        #resetButton:hover {
+            background: rgba(26, 26, 26, 0.481);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <button id="resetButton">بازگشت به حالت اولیه</button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="main.js"></script>
+</body>
+</html> 
