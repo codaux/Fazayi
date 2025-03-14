@@ -117,8 +117,8 @@ loader.load(
 // تنظیمات فیزیک توپ‌ها
 const BALL_RADIUS = 0.8; // افزایش از 0.64 به 0.8
 const BALL_MASS = 2.0;
-const FRICTION = 0.98; // کاهش اصطکاک
-const RESTITUTION = 0.7; // افزایش ضریب بازگشت
+const FRICTION = 0.88; // کاهش اصطکاک
+const RESTITUTION = 0.45; // افزایش ضریب بازگشت
 const REPULSION_FORCE = 2.0; // افزایش نیروی دافعه
 
 // تنظیم موقعیت اولیه توپ‌ها
