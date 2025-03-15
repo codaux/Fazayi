@@ -24,16 +24,16 @@ controls.maxDistance = 100; // افزایش فاصله حداکثر
 controls.maxPolarAngle = Math.PI;
 
 // تنظیمات نور
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // کاهش شدت نور محیطی
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // کاهش شدت نور محیطی
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9); // کاهش شدت نور جهت‌دار
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3); // کاهش شدت نور جهت‌دار
 directionalLight.position.set(-4, 3, 3); // تغییر جهت نور
 directionalLight.castShadow = true;
-directionalLight.shadow.radius = 4; // افزایش نرمی سایه
+directionalLight.shadow.radius = 6; // افزایش نرمی سایه
 directionalLight.shadow.bias = -0.0001; // تنظیم بایاس سایه
-directionalLight.shadow.mapSize.width = 4096; // افزایش کیفیت سایه
-directionalLight.shadow.mapSize.height = 4096;
+directionalLight.shadow.mapSize.width = 1024; // افزایش کیفیت سایه
+directionalLight.shadow.mapSize.height = 1024;
 directionalLight.shadow.camera.near = 0.5;
 directionalLight.shadow.camera.far = 50;
 directionalLight.shadow.camera.left = -15;
@@ -43,13 +43,13 @@ directionalLight.shadow.camera.bottom = -15;
 scene.add(directionalLight);
 
 // اضافه کردن نور نقطه‌ای برای جلوه بیشتر
-const pointLight = new THREE.PointLight(0xffffff, 0.3, 100); // کاهش شدت نور نقطه‌ای
-pointLight.position.set(-3, 3, -3);
+const pointLight = new THREE.PointLight(0xffffff, 0.6, 100); // کاهش شدت نور نقطه‌ای
+pointLight.position.set(-3, 3, 3);
 scene.add(pointLight);
 
 // اضافه کردن نور نرم از پایین
-const bottomLight = new THREE.PointLight(0xff00ff, 0.1, 100);
-bottomLight.position.set(0, -5, 1);
+const bottomLight = new THREE.PointLight(0xff00ff, 0.2, 100);
+bottomLight.position.set(1, -3, 1);
 scene.add(bottomLight);
 
 // ایجاد محفظه نیم‌کره شفاف با کیفیت بالاتر
@@ -82,7 +82,7 @@ loader.load(
         base.traverse((node) => {
             if (node.isMesh) {
                 node.material = new THREE.MeshPhysicalMaterial({
-                    color: 0xff00aa,
+                    color: 0xff8000,
                     metalness: 0.2,
                     roughness: 0.9,
                     clearcoat: 0.3,
@@ -180,7 +180,40 @@ function resetBalls() {
 // اضافه کردن event listener برای دکمه ریست
 document.getElementById('resetButton').addEventListener('click', resetBalls);
 
-// به‌روزرسانی تابع animate برای در نظر گرفتن کف کاسه‌ای
+// اضافه کردن event listener برای کلیک و تپ
+const handleThrowBalls = () => {
+    isAnimating = true;
+    gravityEnabled = true;
+    balls.forEach(ball => {
+        ball.userData.velocity.set(
+            (Math.random() - 0.5) * 0.8,
+            (Math.random() - 0.5) * 0.8,
+            (Math.random() - 0.5) * 0.8
+        );
+    });
+};
+
+renderer.domElement.addEventListener('click', handleThrowBalls);
+renderer.domElement.addEventListener('touchstart', handleThrowBalls);
+
+// اضافه کردن شتاب‌سنج
+if (window.DeviceMotionEvent) {
+    window.addEventListener('devicemotion', (event) => {
+        if (isAnimating) {
+            const acceleration = event.accelerationIncludingGravity;
+            const shakeThreshold = 15; // مقدار آستانه برای تشخیص تکان
+            if (Math.abs(acceleration.x) > shakeThreshold || Math.abs(acceleration.y) > shakeThreshold || Math.abs(acceleration.z) > shakeThreshold) {
+                balls.forEach(ball => {
+                    ball.userData.velocity.x += (Math.random() - 0.5) * 0.1; // تکان دادن توپ‌ها
+                    ball.userData.velocity.y += (Math.random() - 0.5) * 0.1;
+                    ball.userData.velocity.z += (Math.random() - 0.5) * 0.1;
+                });
+            }
+        }
+    });
+}
+
+// به‌روزرسانی تابع animate برای در نظر گرفتن میرایی بیشتر
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
@@ -202,7 +235,6 @@ function animate() {
             ball.position.add(ball.userData.velocity);
             
             // بررسی برخورد با مدل KAF
-            // این قسمت نیاز به تنظیم دقیق بر اساس شکل مدل دارد
             const raycaster = new THREE.Raycaster(
                 ball.position.clone().add(new THREE.Vector3(0, 1, 0)),
                 new THREE.Vector3(0, -1, 0)
@@ -321,19 +353,6 @@ function handleBallCollision(ball1, ball2) {
         ));
     }
 }
-
-// اضافه کردن event listener برای کلیک
-renderer.domElement.addEventListener('click', () => {
-    isAnimating = true;
-    gravityEnabled = true;
-    balls.forEach(ball => {
-        ball.userData.velocity.set(
-            (Math.random() - 0.5) * 0.8, // افزایش از 0.5 به 0.8
-            (Math.random() - 0.5) * 0.8,
-            (Math.random() - 0.5) * 0.8
-        );
-    });
-});
 
 // تنظیم اندازه پنجره
 window.addEventListener('resize', () => {
