@@ -32,8 +32,8 @@ directionalLight.position.set(-4, 3, 3); // تغییر جهت نور
 directionalLight.castShadow = true;
 directionalLight.shadow.radius = 6; // افزایش نرمی سایه
 directionalLight.shadow.bias = -0.0001; // تنظیم بایاس سایه
-directionalLight.shadow.mapSize.width = 1024; // افزایش کیفیت سایه
-directionalLight.shadow.mapSize.height = 1024;
+directionalLight.shadow.mapSize.width = 512; // کاهش کیفیت سایه
+directionalLight.shadow.mapSize.height = 512;
 directionalLight.shadow.camera.near = 0.5;
 directionalLight.shadow.camera.far = 50;
 directionalLight.shadow.camera.left = -15;
@@ -47,10 +47,8 @@ const pointLight = new THREE.PointLight(0xffffff, 0.6, 100); // کاهش شدت 
 pointLight.position.set(-3, 3, 3);
 scene.add(pointLight);
 
-// اضافه کردن نور نرم از پایین
-const bottomLight = new THREE.PointLight(0xff00ff, 0.2, 100);
-bottomLight.position.set(1, -3, 1);
-scene.add(bottomLight);
+// حذف نور نرم از پایین
+// scene.remove(bottomLight);
 
 // ایجاد محفظه نیم‌کره شفاف با کیفیت بالاتر
 const radius = 7;
@@ -122,9 +120,9 @@ const RESTITUTION = 0.45; // افزایش ضریب بازگشت
 const REPULSION_FORCE = 2.0; // افزایش نیروی دافعه
 
 // تنظیم موقعیت اولیه توپ‌ها
-const ballColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
+const ballColors = [0xff0000, 0x00ff00, 0x0000ff]; // کاهش تعداد رنگ‌ها
 const balls = [];
-const ballGeometry = new THREE.SphereGeometry(BALL_RADIUS, 64, 64); // افزایش کیفیت توپ‌ها
+const ballGeometry = new THREE.SphereGeometry(BALL_RADIUS, 32, 32); // کاهش تعداد قطعات هندسی توپ‌ها
 
 const startHeight = 4;
 const spacing = BALL_RADIUS * 3;
@@ -214,81 +212,87 @@ if (window.DeviceMotionEvent) {
 }
 
 // به‌روزرسانی تابع animate برای در نظر گرفتن میرایی بیشتر
+const physicsUpdateInterval = 2; // به‌روزرسانی فیزیک هر 2 فریم یک‌بار
+let frameCount = 0;
+
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
 
     if (isAnimating && base) {
-        balls.forEach(ball => {
-            if (gravityEnabled) {
-                ball.userData.velocity.y += gravity;
-            }
-            
-            // اعمال اصطکاک بیشتر برای میرایی حرکت
-            ball.userData.velocity.multiplyScalar(FRICTION);
-            
-            // اضافه کردن یک حد آستانه برای توقف حرکت‌های کوچک
-            if (ball.userData.velocity.length() < 0.01) {
-                ball.userData.velocity.set(0, 0, 0);
-            }
-            
-            ball.position.add(ball.userData.velocity);
-            
-            // بررسی برخورد با مدل KAF
-            const raycaster = new THREE.Raycaster(
-                ball.position.clone().add(new THREE.Vector3(0, 1, 0)),
-                new THREE.Vector3(0, -1, 0)
-            );
-            const intersects = raycaster.intersectObject(base, true);
-            
-            if (intersects.length > 0 && intersects[0].distance < 1 + BALL_RADIUS) {
-                ball.position.y = intersects[0].point.y + BALL_RADIUS;
+        frameCount++;
+        if (frameCount % physicsUpdateInterval === 0) {
+            balls.forEach(ball => {
+                if (gravityEnabled) {
+                    ball.userData.velocity.y += gravity;
+                }
                 
-                // محاسبه نرمال سطح در نقطه برخورد
-                const surfaceNormal = intersects[0].face.normal.clone();
-                surfaceNormal.applyQuaternion(intersects[0].object.quaternion);
+                // اعمال اصطکاک بیشتر برای میرایی حرکت
+                ball.userData.velocity.multiplyScalar(FRICTION);
                 
-                // بازتاب سرعت نسبت به نرمال سطح
-                const reflection = ball.userData.velocity.reflect(surfaceNormal);
-                ball.userData.velocity.copy(reflection.multiplyScalar(RESTITUTION));
-            }
-            
-            // بررسی برخورد با نیم‌کره
-            const distanceFromCenter = new THREE.Vector3(
-                ball.position.x,
-                ball.position.y,
-                ball.position.z
-            ).length();
-            
-            if (distanceFromCenter > radius - BALL_RADIUS) {
-                const normal = ball.position.clone().normalize();
-                const reflection = ball.userData.velocity.reflect(normal);
-                ball.userData.velocity.copy(reflection.multiplyScalar(RESTITUTION));
-                const newPos = normal.multiplyScalar(radius - BALL_RADIUS);
-                ball.position.copy(newPos);
-            }
-        });
+                // اضافه کردن یک حد آستانه برای توقف حرکت‌های کوچک
+                if (ball.userData.velocity.length() < 0.01) {
+                    ball.userData.velocity.set(0, 0, 0);
+                }
+                
+                ball.position.add(ball.userData.velocity);
+                
+                // بررسی برخورد با مدل KAF
+                const raycaster = new THREE.Raycaster(
+                    ball.position.clone().add(new THREE.Vector3(0, 1, 0)),
+                    new THREE.Vector3(0, -1, 0)
+                );
+                const intersects = raycaster.intersectObject(base, true);
+                
+                if (intersects.length > 0 && intersects[0].distance < 1 + BALL_RADIUS) {
+                    ball.position.y = intersects[0].point.y + BALL_RADIUS;
+                    
+                    // محاسبه نرمال سطح در نقطه برخورد
+                    const surfaceNormal = intersects[0].face.normal.clone();
+                    surfaceNormal.applyQuaternion(intersects[0].object.quaternion);
+                    
+                    // بازتاب سرعت نسبت به نرمال سطح
+                    const reflection = ball.userData.velocity.reflect(surfaceNormal);
+                    ball.userData.velocity.copy(reflection.multiplyScalar(RESTITUTION));
+                }
+                
+                // بررسی برخورد با نیم‌کره
+                const distanceFromCenter = new THREE.Vector3(
+                    ball.position.x,
+                    ball.position.y,
+                    ball.position.z
+                ).length();
+                
+                if (distanceFromCenter > radius - BALL_RADIUS) {
+                    const normal = ball.position.clone().normalize();
+                    const reflection = ball.userData.velocity.reflect(normal);
+                    ball.userData.velocity.copy(reflection.multiplyScalar(RESTITUTION));
+                    const newPos = normal.multiplyScalar(radius - BALL_RADIUS);
+                    ball.position.copy(newPos);
+                }
+            });
 
-        // بررسی برخورد بین توپ‌ها
-        for (let i = 0; i < balls.length; i++) {
-            for (let j = i + 1; j < balls.length; j++) {
-                handleBallCollision(balls[i], balls[j]);
+            // بررسی برخورد بین توپ‌ها
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    handleBallCollision(balls[i], balls[j]);
+                }
             }
+
+            // بررسی خروج از سوراخ‌ها
+            balls.forEach(ball => {
+                // حذف سوراخ‌های روی شیشه
+                // const distance = ball.position.distanceTo(hole.position);
+                // if (distance < 1) {
+                //     ball.position.set(
+                //         (Math.random() - 0.5) * 4,
+                //         Math.abs((Math.random()) * 2),
+                //         (Math.random() - 0.5) * 4
+                //     );
+                //     ball.userData.velocity.set(0, 0, 0);
+                // }
+            });
         }
-
-        // بررسی خروج از سوراخ‌ها
-        balls.forEach(ball => {
-            // حذف سوراخ‌های روی شیشه
-            // const distance = ball.position.distanceTo(hole.position);
-            // if (distance < 1) {
-            //     ball.position.set(
-            //         (Math.random() - 0.5) * 4,
-            //         Math.abs((Math.random()) * 2),
-            //         (Math.random() - 0.5) * 4
-            //     );
-            //     ball.userData.velocity.set(0, 0, 0);
-            // }
-        });
     }
 
     renderer.render(scene, camera);
